@@ -48,7 +48,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
     function postConnect() {
         $this->Lexer->addExitPattern('\n', 'plugin_yalist');
     }
-    function handle($match, $state, $pos, &$handler) {
+    function handle($match, $state, $pos, Doku_Handler $handler) {
         $output = array();
         $level = 0;
         switch ($state) {
@@ -195,7 +195,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
             'paras' => (substr($match, -1) == substr($match, -2, 1)),
         );
     }
-    function render($mode, &$renderer, $data) {
+    function render($mode, Doku_Renderer $renderer, $data) {
         if ($mode != 'xhtml' && $mode != 'latex')
             return false;
         if ($data['state'] == DOKU_LEXER_UNMATCHED) {
