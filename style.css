@@ -14,12 +14,6 @@ div.dokuwiki .dt {
     float: left;
 }
 
-div.dokuwiki .dt,
-div.dokuwiki .dd,
-div.dokuwiki .li {
-    margin-bottom: 0.33em;
-}
-
 div.dokuwiki dd {
     margin-left: 3em;
 }
