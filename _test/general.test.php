@@ -18,7 +18,7 @@
 /**
  * General tests for the yalist plugin.
  *
- * @group yalist
+ * @group plugin_yalist
  * @group plugins
  */
 class general_plugin_yalist_test extends DokuWikiTest {
