@@ -26,6 +26,9 @@ if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 require_once(DOKU_PLUGIN.'syntax.php');
 class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
     var $stack = array();
+    static $odt_table_stack = array();
+    static $odt_table_stack_index = 0;
+
     function getType() {
         return 'container';
     }
@@ -195,140 +198,464 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
             'paras' => (substr($match, -1) == substr($match, -2, 1)),
         );
     }
+
     function render($mode, Doku_Renderer $renderer, $data) {
-        if ($mode != 'xhtml' && $mode != 'latex')
+        if ($mode != 'xhtml' && $mode != 'latex' && $mode != 'odt')
             return false;
         if ($data['state'] == DOKU_LEXER_UNMATCHED) {
-            $renderer->doc .= $renderer->_xmlEntities($data['output']);
+            if ($mode != 'odt') {
+                $renderer->doc .= $renderer->_xmlEntities($data['output']);
+            } else {
+                $renderer->cdata($data['output']);
+            }
             return true;
         }
         foreach ($data['output'] as $i) {
-            $markup = '';
-            if ($mode == 'xhtml') {
-                switch ($i) {
-                case 'ol_open':
-                    $markup = "<ol>\n";
-                    break;
-                case 'ol_close':
-                    $markup = "</ol>\n";
-                    break;
-                case 'ul_open':
-                    $markup = "<ul>\n";
-                    break;
-                case 'ul_close':
-                    $markup = "</ul>\n";
-                    break;
-                case 'dl_open':
-                    $markup = "<dl>\n";
-                    break;
-                case 'dl_close':
-                    $markup = "</dl>\n";
-                    break;
-                case 'li_open':
-                    $markup = "<li class=\"level${data['level']}\">";
-                    break;
-                case 'li_content_open':
-                    $markup = "<div class=\"li\">\n";
-                    break;
-                case 'li_content_close':
-                    $markup = "\n</div>";
-                    break;
-                case 'li_close':
-                    $markup = "</li>\n";
-                    break;
-                case 'dt_open':
-                    $markup = "<dt class=\"level${data['level']}\">";
-                    break;
-                case 'dt_content_open':
-                    $markup = "<span class=\"dt\">";
-                    break;
-                case 'dt_content_close':
-                    $markup = "</span>";
-                    break;
-                case 'dt_close':
-                    $markup = "</dt>\n";
-                    break;
-                case 'dd_open':
-                    $markup = "<dd class=\"level${data['level']}\">";
-                    break;
-                case 'dd_content_open':
-                    $markup = "<div class=\"dd\">\n";
-                    break;
-                case 'dd_content_close':
-                    $markup = "\n</div>";
-                    break;
-                case 'dd_close':
-                    $markup = "</dd>\n";
-                    break;
-                case 'p_open':
-                    $markup = "<p>\n";
-                    break;
-                case 'p_close':
-                    $markup = "\n</p>";
-                    break;
-                }
-            } else {
-                // $mode == 'latex'
-                switch ($i) {
-                case 'ol_open':
-                    $markup = "\\begin{enumerate}\n";
-                    break;
-                case 'ol_close':
-                    $markup = "\\end{enumerate}\n";
-                    break;
-                case 'ul_open':
-                    $markup = "\\begin{itemize}\n";
-                    break;
-                case 'ul_close':
-                    $markup = "\\end{itemize}\n";
-                    break;
-                case 'dl_open':
-                    $markup = "\\begin{description}\n";
-                    break;
-                case 'dl_close':
-                    $markup = "\\end{description}\n";
-                    break;
-                case 'li_open':
-                    $markup = "\item ";
-                    break;
-                case 'li_content_open':
-                    break;
-                case 'li_content_close':
-                    break;
-                case 'li_close':
-                    $markup = "\n";
-                    break;
-                case 'dt_open':
-                    $markup = "\item[";
-                    break;
-                case 'dt_content_open':
-                    break;
-                case 'dt_content_close':
-                    break;
-                case 'dt_close':
-                    $markup = "] ";
-                    break;
-                case 'dd_open':
-                    break;
-                case 'dd_content_open':
-                    break;
-                case 'dd_content_close':
-                    break;
-                case 'dd_close':
-                    $markup = "\n";
-                    break;
-                case 'p_open':
-                    $markup = "\n";
-                    break;
-                case 'p_close':
-                    $markup = "\n";
-                    break;
-                }
+            switch ($mode) {
+                case 'xhtml':
+                    $this->render_xhtml_item($renderer, $i, $data);
+                break;
+                case 'latex':
+                    $this->render_latex_item($renderer, $i, $data);
+                break;
+                case 'odt':
+                    $this->render_odt_item($renderer, $i, $data);
+                break;
             }
-            $renderer->doc .= $markup;
         }
-        if ($data['state'] == DOKU_LEXER_EXIT)
-            $renderer->doc .= "\n";
+        if ($data['state'] == DOKU_LEXER_EXIT) {
+            if ($mode != 'odt') {
+                $renderer->doc .= "\n";
+            } else {
+                $renderer->linebreak();
+            }
+        }
         return true;
+    }
+
+    function render_xhtml_item(Doku_Renderer $renderer, $item) {
+        $markup = '';
+        switch ($item) {
+        case 'ol_open':
+            $markup = "<ol>\n";
+            break;
+        case 'ol_close':
+            $markup = "</ol>\n";
+            break;
+        case 'ul_open':
+            $markup = "<ul>\n";
+            break;
+        case 'ul_close':
+            $markup = "</ul>\n";
+            break;
+        case 'dl_open':
+            $markup = "<dl>\n";
+            break;
+        case 'dl_close':
+            $markup = "</dl>\n";
+            break;
+        case 'li_open':
+            $markup = "<li class=\"level${data['level']}\">";
+            break;
+        case 'li_content_open':
+            $markup = "<div class=\"li\">\n";
+            break;
+        case 'li_content_close':
+            $markup = "\n</div>";
+            break;
+        case 'li_close':
+            $markup = "</li>\n";
+            break;
+        case 'dt_open':
+            $markup = "<dt class=\"level${data['level']}\">";
+            break;
+        case 'dt_content_open':
+            $markup = "<span class=\"dt\">";
+            break;
+        case 'dt_content_close':
+            $markup = "</span>";
+            break;
+        case 'dt_close':
+            $markup = "</dt>\n";
+            break;
+        case 'dd_open':
+            $markup = "<dd class=\"level${data['level']}\">";
+            break;
+        case 'dd_content_open':
+            $markup = "<div class=\"dd\">\n";
+            break;
+        case 'dd_content_close':
+            $markup = "\n</div>";
+            break;
+        case 'dd_close':
+            $markup = "</dd>\n";
+            break;
+        case 'p_open':
+            $markup = "<p>\n";
+            break;
+        case 'p_close':
+            $markup = "\n</p>";
+            break;
+        }
+        $renderer->doc .= $markup;
+    }
+
+    function render_latex_item(Doku_Renderer $renderer, $item) {
+        $markup = '';
+        switch ($i) {
+        case 'ol_open':
+            $markup = "\\begin{enumerate}\n";
+            break;
+        case 'ol_close':
+            $markup = "\\end{enumerate}\n";
+            break;
+        case 'ul_open':
+            $markup = "\\begin{itemize}\n";
+            break;
+        case 'ul_close':
+            $markup = "\\end{itemize}\n";
+            break;
+        case 'dl_open':
+            $markup = "\\begin{description}\n";
+            break;
+        case 'dl_close':
+            $markup = "\\end{description}\n";
+            break;
+        case 'li_open':
+            $markup = "\item ";
+            break;
+        case 'li_content_open':
+            break;
+        case 'li_content_close':
+            break;
+        case 'li_close':
+            $markup = "\n";
+            break;
+        case 'dt_open':
+            $markup = "\item[";
+            break;
+        case 'dt_content_open':
+            break;
+        case 'dt_content_close':
+            break;
+        case 'dt_close':
+            $markup = "] ";
+            break;
+        case 'dd_open':
+            break;
+        case 'dd_content_open':
+            break;
+        case 'dd_content_close':
+            break;
+        case 'dd_close':
+            $markup = "\n";
+            break;
+        case 'p_open':
+            $markup = "\n";
+            break;
+        case 'p_close':
+            $markup = "\n";
+            break;
+        }
+        $renderer->doc .= $markup;
+    }
+
+    /**
+     * Render yalist items for ODT format
+     *
+     * @param Doku_Renderer $renderer  The current renderer object
+     * @param string        $item      The item to render
+     *
+     * @author LarsDW223
+     */
+    function render_odt_item(Doku_Renderer $renderer, $item) {
+        switch ($item) {
+        case 'ol_open':
+            $renderer->listo_open();
+            break;
+        case 'ul_open':
+            $renderer->listu_open();
+            break;
+        case 'dl_open':
+            if ($this->getConf('def_list_odt_export') != 'table') {
+                $renderer->listu_open();
+            } else {
+                $renderer->table_open(2);
+            }
+            self::$odt_table_stack [self::$odt_table_stack_index] = array();
+            self::$odt_table_stack [self::$odt_table_stack_index]['itemOpen'] = false;
+            self::$odt_table_stack [self::$odt_table_stack_index]['dtState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index]['ddState'] = 0;
+            self::$odt_table_stack_index++;
+            break;
+        case 'ol_close':
+        case 'ul_close':
+            $renderer->list_close();
+            break;
+        case 'dl_close':
+            $config = $this->getConf('def_list_odt_export');
+            if ($config != 'table') {
+                if (self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] != 2) {
+                    if ($config == 'listheader' && method_exists ($renderer, 'listheader_close')) {
+                        $renderer->listheader_close();
+                    } else {
+                        $renderer->listitem_close();
+                    }
+                }
+                self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 0;
+                $renderer->list_close();
+            } else {
+                if (self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] == 0) {
+                    $properties = array();
+                    $properties ['border'] = 'none';
+                    $renderer->_odtTableCellOpenUseProperties($properties);
+                    $renderer->tablecell_close();
+                }
+                self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 0;
+                if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                    $renderer->tablerow_close(1);
+                    self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                }
+                $renderer->table_close();
+            }
+            if (self::$odt_table_stack_index > 0) {
+                self::$odt_table_stack_index--;
+                unset(self::$odt_table_stack [self::$odt_table_stack_index]);
+            }
+            break;
+
+        case 'li_open':             
+            $renderer->listitem_open(1);
+            break;
+        case 'li_content_open':
+            $renderer->listcontent_open();
+            break;
+        case 'li_content_close':    
+            $renderer->listcontent_close();
+            break;
+        case 'li_close':
+            $renderer->listitem_close();
+            break;
+
+        case 'dt_open': // unconditional: DT tags can't contain paragraphs. That would not be legal XHTML.
+            switch ($this->getConf('def_list_odt_export')) {
+                case 'listheader':
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        if (method_exists ($renderer, 'listheader_close')) {
+                            $renderer->listheader_close();
+                        } else {
+                            $renderer->listitem_close();
+                        }
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                    }
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        if (method_exists ($renderer, 'listheader_open')) {
+                            $renderer->listheader_open(1);
+                        } else {
+                            $renderer->listitem_open(1);
+                        }
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                    }
+                break;
+                case 'table':
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] == 0) {
+                        $properties = array();
+                        $properties ['border'] = 'none';
+                        $renderer->_odtTableCellOpenUseProperties($properties);
+                        $renderer->tablecell_close();
+                    }
+
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        $renderer->tablerow_close();
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                    }
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        $renderer->tablerow_open(1);
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                    }
+                    $properties = array();
+                    $properties ['border'] = 'none';
+                    $renderer->_odtTableCellOpenUseProperties($properties);
+                break;
+                default:
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        $renderer->listitem_close();
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                    }
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        $renderer->listitem_open(1);
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                    }
+                break;
+            }
+            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 1;
+            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 0;
+            break;
+        case 'dd_open':
+            switch ($this->getConf('def_list_odt_export')) {
+                case 'listheader':
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        if (method_exists ($renderer, 'listheader_open')) {
+                            $renderer->listheader_open(1);
+                        } else {
+                            $renderer->listitem_open(1);
+                        }
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                    }
+                break;
+                case 'table':
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        $renderer->tablerow_open(1);
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                    }
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] == 1) {
+                        $renderer->tablecell_close();
+                    }
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] == 0) {
+                        $properties = array();
+                        $properties ['border'] = 'none';
+                        $renderer->_odtTableCellOpenUseProperties($properties);
+                        $renderer->tablecell_close();
+                    }
+
+                    $properties = array();
+                    $properties ['border'] = 'none';
+                    $renderer->_odtTableCellOpenUseProperties($properties);
+                break;
+                default:
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        $renderer->listitem_open(1);
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                    }
+                break;
+            }
+            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 1;
+            break;
+        case 'dt_content_open':
+            switch ($this->getConf('def_list_odt_export')) {
+                case 'table':
+                    $renderer->p_open();
+                break;
+                default:
+                    $renderer->listcontent_open();
+                break;
+            }
+            $this->renderODTOpenSpan($renderer);
+            break;
+        case 'dd_content_open':
+            switch ($this->getConf('def_list_odt_export')) {
+                case 'table':
+                    $renderer->p_open();
+                break;
+                default:
+                    $renderer->listcontent_open();
+                break;
+            }
+            break;
+        case 'dt_content_close':
+            $this->renderODTCloseSpan($renderer);
+            switch ($this->getConf('def_list_odt_export')) {
+                case 'table':
+                    $renderer->p_close();
+                break;
+                default:
+                    $renderer->listcontent_close();
+                break;
+            }
+            break;
+        case 'dd_content_close':
+            switch ($this->getConf('def_list_odt_export')) {
+                case 'table':
+                    $renderer->p_close();
+                break;
+                default:
+                    $renderer->listcontent_close();
+                break;
+            }
+            break;
+        case 'dt_close':
+            switch ($this->getConf('def_list_odt_export')) {
+                case 'listheader':
+                    $renderer->linebreak();
+                    break;
+                case 'table':
+                    $renderer->tablecell_close();
+                    self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 2;
+                    break;
+                default:
+                    $renderer->linebreak();
+                    break;
+            }
+            break;
+
+        case 'dd_close':
+            switch ($this->getConf('def_list_odt_export')) {
+                case 'listheader':
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        if (method_exists ($renderer, 'listheader_close')) {
+                            $renderer->listheader_close();
+                        } else {
+                            $renderer->listitem_close();
+                        }
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                    }
+                    break;
+                case 'table':
+                    $renderer->tablecell_close();
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        $renderer->tablerow_close(1);
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                    }
+                    break;
+                default:
+                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        $renderer->listitem_close(1);
+                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                    }
+                    break;
+            }
+            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 2;
+            break;
+
+        case 'p_open':
+            $renderer->p_open();
+            break;
+        case 'p_close':
+            $renderer->p_close();
+            break;
+        }
+    }
+
+    /**
+     * Open ODT span for rendering of dt-content
+     *
+     * @param Doku_Renderer $renderer  The current renderer object
+     *
+     * @author LarsDW223
+     */
+    function renderODTOpenSpan ($renderer) {
+        $properties = array ();
+
+        // Get CSS properties for ODT export.
+        $renderer->getODTProperties ($properties, 'div', 'dokuwiki dt', NULL);
+
+        $renderer->_odtSpanOpenUseProperties($properties);
+    }
+
+    /**
+     * Close ODT span for rendering of dt-content
+     *
+     * @param Doku_Renderer $renderer  The current renderer object
+     *
+     * @author LarsDW223
+     */
+    function renderODTCloseSpan ($renderer) {
+        if ( method_exists ($renderer, '_odtSpanClose') === false ) {
+            // Function is not supported by installed ODT plugin version, return.
+            return;
+        }
+        $renderer->_odtSpanClose();
     }
 }

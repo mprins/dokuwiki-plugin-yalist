@@ -1,0 +1,7 @@
+div.dokuwiki .dt {
+    margin-right: 1em;
+    color: __text_alt__;
+    font-weight: bold;
+    max-width: 30%;
+    float: left;
+}
