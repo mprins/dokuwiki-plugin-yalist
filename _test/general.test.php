@@ -23,6 +23,8 @@
  */
 class general_plugin_yalist_test extends DokuWikiTest {
 
+    protected $pluginsEnabled = array('yalist');
+
     /**
      * Simple test to make sure the plugin.info.txt is in correct format.
      */
@@ -45,5 +47,16 @@ class general_plugin_yalist_test extends DokuWikiTest {
         $this->assertTrue(mail_isvalid($info['email']));
         $this->assertRegExp('/^\d\d\d\d-\d\d-\d\d$/', $info['date']);
         $this->assertTrue(false !== strtotime($info['date']));
+    }
+
+    /**
+     * test if plugin is loaded.
+     */
+    public function test_plugin_yalist_isloaded() {
+        global $plugin_controller;
+        $this->assertTrue(
+                    in_array('yalist', $plugin_controller->getList()),
+                    "yalist plugin is loaded"
+                            );
     }
 }
