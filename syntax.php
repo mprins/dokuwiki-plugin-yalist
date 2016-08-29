@@ -453,78 +453,78 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
             case 'dt_open': // unconditional: DT tags can't contain paragraphs. That would not be legal XHTML.
                 switch ($this->getConf('def_list_odt_export')) {
                     case 'listheader':
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
-                            if (method_exists ($renderer, 'listheader_close')) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            if (method_exists($renderer, 'listheader_close')) {
                                 $renderer->listheader_close();
                             } else {
                                 $renderer->listitem_close();
                             }
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
-                            if (method_exists ($renderer, 'listheader_open')) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            if (method_exists($renderer, 'listheader_open')) {
                                 $renderer->listheader_open(1);
                             } else {
                                 $renderer->listitem_open(1);
                             }
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
                     break;
                     case 'table':
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] == 0) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] == 0) {
                             $properties = array();
                             $properties ['border'] = 'none';
                             $renderer->_odtTableCellOpenUseProperties($properties);
                             $renderer->tablecell_close();
                         }
 
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                             $renderer->tablerow_close();
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
                             $renderer->tablerow_open(1);
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
                         $properties = array();
                         $properties ['border'] = 'none';
                         $renderer->_odtTableCellOpenUseProperties($properties);
                     break;
                     default:
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                             $renderer->listitem_close();
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
                             $renderer->listitem_open(1);
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
                     break;
                 }
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 1;
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 1;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 0;
             break;
             case 'dd_open':
                 switch ($this->getConf('def_list_odt_export')) {
                     case 'listheader':
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
-                            if (method_exists ($renderer, 'listheader_open')) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            if (method_exists($renderer, 'listheader_open')) {
                                 $renderer->listheader_open(1);
                             } else {
                                 $renderer->listitem_open(1);
                             }
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
                     break;
                     case 'table':
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
                             $renderer->tablerow_open(1);
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] == 1) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] == 1) {
                             $renderer->tablecell_close();
                         }
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] == 0) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] == 0) {
                             $properties = array();
                             $properties ['border'] = 'none';
                             $renderer->_odtTableCellOpenUseProperties($properties);
@@ -536,14 +536,14 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                         $renderer->_odtTableCellOpenUseProperties($properties);
                     break;
                     default:
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
                             $renderer->listitem_open(1);
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
                     break;
                 }
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 0;
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 1;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 1;
             break;
             case 'dt_content_open':
                 switch ($this->getConf('def_list_odt_export')) {
@@ -605,31 +605,31 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
             case 'dd_close':
                 switch ($this->getConf('def_list_odt_export')) {
                     case 'listheader':
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
-                            if (method_exists ($renderer, 'listheader_close')) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            if (method_exists($renderer, 'listheader_close')) {
                                 $renderer->listheader_close();
                             } else {
                                 $renderer->listitem_close();
                             }
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
                         break;
                     case 'table':
                         $renderer->tablecell_close();
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                             $renderer->tablerow_close(1);
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
                         break;
                     default:
-                        if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                             $renderer->listitem_close(1);
-                            self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
                         break;
                 }
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 0;
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 2;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 2;
             break;
 
             case 'p_open':
