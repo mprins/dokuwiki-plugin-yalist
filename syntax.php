@@ -315,7 +315,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
 
     function render_latex_item(Doku_Renderer $renderer, $item) {
         $markup = '';
-        switch ($i) {
+        switch ($item) {
             case 'ol_open':
                 $markup = "\\begin{enumerate}\n";
                 break;
