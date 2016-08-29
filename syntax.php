@@ -21,8 +21,12 @@
  * @author     Ben Slusky <sluskyb@paranoiacs.org>
  *
  */
-if (!defined('DOKU_INC')) define('DOKU_INC', realpath(dirname(__FILE__) . '/../../') . '/');
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
+if (!defined('DOKU_INC')) {
+    define('DOKU_INC', realpath(dirname(__FILE__) . '/../../') . '/');
+}
+if (!defined('DOKU_PLUGIN')) {
+    define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
+}
 require_once(DOKU_PLUGIN . 'syntax.php');
 class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
     var $stack = array();
@@ -55,15 +59,16 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         $output = array();
         $level = 0;
         switch ($state) {
-        case DOKU_LEXER_ENTER:
-            $frame = $this->_interpret_match($match);
-            $level = $frame['level'] = 1;
-            array_push($output,
-                        "${frame['list']}_open",
+            case DOKU_LEXER_ENTER:
+                $frame = $this->_interpret_match($match);
+                $level = $frame['level'] = 1;
+                array_push($output,
+                            "${frame['list']}_open",
                         "${frame['item']}_open",
                         "${frame['item']}_content_open");
-            if ($frame['paras'])
-                array_push($output, 'p_open');
+            if ($frame['paras']) {
+                            array_push($output, 'p_open');
+            }
             array_push($this->stack, $frame);
             break;
         case DOKU_LEXER_EXIT:
@@ -106,13 +111,14 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                     $last_frame = end($this->stack);
                 }
                 if ($last_frame['paras']) {
-                    if ($close_content)
-                        // depth did not change
+                    if ($close_content) {
+                                            // depth did not change
                         array_push($output, 'p_close', 'p_open');
-                    else
-                        array_push($output,
+                    } else {
+                                            array_push($output,
                                     "${last_frame['item']}_content_open",
                                     'p_open');
+                    }
                 } else {
                     // let's just pretend we didn't match...
                     $state = DOKU_LEXER_UNMATCHED;
@@ -177,8 +183,9 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
             array_push($output,
                         "${curr_frame['item']}_open",
                         "${curr_frame['item']}_content_open");
-            if ($curr_frame['paras'])
-                array_push($output, 'p_open');
+            if ($curr_frame['paras']) {
+                            array_push($output, 'p_open');
+            }
             $curr_frame['level'] = $level;
             array_push($this->stack, $curr_frame);
             break;
@@ -308,7 +315,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
 
     function render_latex_item(Doku_Renderer $renderer, $item) {
         $markup = '';
-        switch ($i) {
+        switch ($item) {
             case 'ol_open':
                 $markup = "\\begin{enumerate}\n";
                 break;
@@ -401,26 +408,26 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
             case 'dl_close':
                 $config = $this->getConf('def_list_odt_export');
                 if ($config != 'table') {
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] != 2) {
-                        if ($config == 'listheader' && method_exists ($renderer, 'listheader_close')) {
+                    if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] != 2) {
+                        if ($config == 'listheader' && method_exists($renderer, 'listheader_close')) {
                             $renderer->listheader_close();
                         } else {
                             $renderer->listitem_close();
                         }
                     }
-                    self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 0;
+                    self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 0;
                     $renderer->list_close();
                 } else {
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] == 0) {
+                    if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] == 0) {
                         $properties = array();
                         $properties ['border'] = 'none';
                         $renderer->_odtTableCellOpenUseProperties($properties);
                         $renderer->tablecell_close();
                     }
-                    self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 0;
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
+                    self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 0;
+                    if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                         $renderer->tablerow_close(1);
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
+                        self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                     }
                     $renderer->table_close();
                 }
@@ -445,184 +452,184 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
 
             case 'dt_open': // unconditional: DT tags can't contain paragraphs. That would not be legal XHTML.
                 switch ($this->getConf('def_list_odt_export')) {
-                case 'listheader':
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
-                        if (method_exists ($renderer, 'listheader_close')) {
-                            $renderer->listheader_close();
-                        } else {
-                            $renderer->listitem_close();
+                    case 'listheader':
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            if (method_exists($renderer, 'listheader_close')) {
+                                $renderer->listheader_close();
+                            } else {
+                                $renderer->listitem_close();
+                            }
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
-                    }
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
-                        if (method_exists ($renderer, 'listheader_open')) {
-                            $renderer->listheader_open(1);
-                        } else {
-                            $renderer->listitem_open(1);
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            if (method_exists($renderer, 'listheader_open')) {
+                                $renderer->listheader_open(1);
+                            } else {
+                                $renderer->listitem_open(1);
+                            }
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
-                    }
-                break;
-                case 'table':
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] == 0) {
+                    break;
+                    case 'table':
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] == 0) {
+                            $properties = array();
+                            $properties ['border'] = 'none';
+                            $renderer->_odtTableCellOpenUseProperties($properties);
+                            $renderer->tablecell_close();
+                        }
+
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            $renderer->tablerow_close();
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
+                        }
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            $renderer->tablerow_open(1);
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
+                        }
                         $properties = array();
                         $properties ['border'] = 'none';
                         $renderer->_odtTableCellOpenUseProperties($properties);
-                        $renderer->tablecell_close();
-                    }
-
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
-                        $renderer->tablerow_close();
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
-                    }
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
-                        $renderer->tablerow_open(1);
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
-                    }
-                    $properties = array();
-                    $properties ['border'] = 'none';
-                    $renderer->_odtTableCellOpenUseProperties($properties);
-                break;
-                default:
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
-                        $renderer->listitem_close();
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
-                    }
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
-                        $renderer->listitem_open(1);
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
-                    }
-                break;
+                    break;
+                    default:
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            $renderer->listitem_close();
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
+                        }
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            $renderer->listitem_open(1);
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
+                        }
+                    break;
                 }
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 1;
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 1;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 0;
             break;
             case 'dd_open':
                 switch ($this->getConf('def_list_odt_export')) {
-                case 'listheader':
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
-                        if (method_exists ($renderer, 'listheader_open')) {
-                            $renderer->listheader_open(1);
-                        } else {
-                            $renderer->listitem_open(1);
+                    case 'listheader':
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            if (method_exists($renderer, 'listheader_open')) {
+                                $renderer->listheader_open(1);
+                            } else {
+                                $renderer->listitem_open(1);
+                            }
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
-                    }
-                break;
-                case 'table':
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
-                        $renderer->tablerow_open(1);
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
-                    }
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] == 1) {
-                        $renderer->tablecell_close();
-                    }
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] == 0) {
+                    break;
+                    case 'table':
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            $renderer->tablerow_open(1);
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
+                        }
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] == 1) {
+                            $renderer->tablecell_close();
+                        }
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] == 0) {
+                            $properties = array();
+                            $properties ['border'] = 'none';
+                            $renderer->_odtTableCellOpenUseProperties($properties);
+                            $renderer->tablecell_close();
+                        }
+
                         $properties = array();
                         $properties ['border'] = 'none';
                         $renderer->_odtTableCellOpenUseProperties($properties);
-                        $renderer->tablecell_close();
-                    }
-
-                    $properties = array();
-                    $properties ['border'] = 'none';
-                    $renderer->_odtTableCellOpenUseProperties($properties);
-                break;
-                default:
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === false) {
-                        $renderer->listitem_open(1);
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = true;
-                    }
-                break;
+                    break;
+                    default:
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            $renderer->listitem_open(1);
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
+                        }
+                    break;
                 }
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 0;
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 1;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 1;
             break;
             case 'dt_content_open':
                 switch ($this->getConf('def_list_odt_export')) {
-                case 'table':
-                    $renderer->p_open();
-                break;
-                default:
-                    $renderer->listcontent_open();
-                break;
+                    case 'table':
+                        $renderer->p_open();
+                    break;
+                    default:
+                        $renderer->listcontent_open();
+                    break;
                 }
             $this->renderODTOpenSpan($renderer);
             break;
             case 'dd_content_open':
                 switch ($this->getConf('def_list_odt_export')) {
-                case 'table':
-                    $renderer->p_open();
-                break;
-                default:
-                    $renderer->listcontent_open();
-                break;
+                    case 'table':
+                        $renderer->p_open();
+                    break;
+                    default:
+                        $renderer->listcontent_open();
+                    break;
                 }
             break;
             case 'dt_content_close':
                 $this->renderODTCloseSpan($renderer);
                 switch ($this->getConf('def_list_odt_export')) {
-                case 'table':
-                    $renderer->p_close();
-                break;
-                default:
-                    $renderer->listcontent_close();
-                break;
+                    case 'table':
+                        $renderer->p_close();
+                    break;
+                    default:
+                        $renderer->listcontent_close();
+                    break;
                 }
             break;
             case 'dd_content_close':
                 switch ($this->getConf('def_list_odt_export')) {
-                case 'table':
-                    $renderer->p_close();
-                break;
-                default:
-                    $renderer->listcontent_close();
-                break;
+                    case 'table':
+                        $renderer->p_close();
+                    break;
+                    default:
+                        $renderer->listcontent_close();
+                    break;
                 }
             break;
             case 'dt_close':
                 switch ($this->getConf('def_list_odt_export')) {
-                case 'listheader':
-                    $renderer->linebreak();
-                    break;
-                case 'table':
-                    $renderer->tablecell_close();
-                    self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 2;
-                    break;
-                default:
-                    $renderer->linebreak();
-                    break;
+                    case 'listheader':
+                        $renderer->linebreak();
+                        break;
+                    case 'table':
+                        $renderer->tablecell_close();
+                        self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 2;
+                        break;
+                    default:
+                        $renderer->linebreak();
+                        break;
                 }
             break;
 
             case 'dd_close':
                 switch ($this->getConf('def_list_odt_export')) {
-                case 'listheader':
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
-                        if (method_exists ($renderer, 'listheader_close')) {
-                            $renderer->listheader_close();
-                        } else {
-                            $renderer->listitem_close();
+                    case 'listheader':
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            if (method_exists($renderer, 'listheader_close')) {
+                                $renderer->listheader_close();
+                            } else {
+                                $renderer->listitem_close();
+                            }
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
-                    }
-                    break;
-                case 'table':
-                    $renderer->tablecell_close();
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
-                        $renderer->tablerow_close(1);
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
-                    }
-                    break;
-                default:
-                    if (self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] === true) {
-                        $renderer->listitem_close(1);
-                        self::$odt_table_stack [self::$odt_table_stack_index-1]['itemOpen'] = false;
-                    }
-                    break;
+                        break;
+                    case 'table':
+                        $renderer->tablecell_close();
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            $renderer->tablerow_close(1);
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
+                        }
+                        break;
+                    default:
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            $renderer->listitem_close(1);
+                            self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
+                        }
+                        break;
                 }
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['dtState'] = 0;
-            self::$odt_table_stack [self::$odt_table_stack_index-1]['ddState'] = 2;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 0;
+            self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 2;
             break;
 
             case 'p_open':
