@@ -21,48 +21,48 @@
  * @group plugins
  */
 class syntax_plugin_yalist_test extends DokuWikiTest {
-	protected $pluginsEnabled = array('yalist');
+    protected $pluginsEnabled = array('yalist');
 
 /**
-	 * copy data and add pages to the index.
-	 */
-	public static function setUpBeforeClass() {
-		parent::setUpBeforeClass();
-		global $conf;
-		$conf['allowdebug'] = 1;
-		TestUtils::rcopy(TMP_DIR, dirname(__FILE__) . '/data/');
-		dbglog("\nset up class syntax_plugin_geotag_test");
-	}
-	function setUp() {
-		parent::setUp();
-		global $conf;
-		$conf['allowdebug'] = 1;
-		$conf['cachetime'] = -1;
-		$data = array();
-		search($data, $conf['datadir'], 'search_allpages', array('skipacl' => true));
-		$verbose = false;
-		$force = false;
-		foreach ($data as $val) {
-			idx_addPage($val['id'], $verbose, $force);
-		}
-		if ($conf['allowdebug']) {
-			touch(DOKU_TMP_DATA . 'cache/debug.log');
-		}
-	}
-	public function tearDown() {
-		parent::tearDown();
-		global $conf;
-		// try to get the debug log after running the test, print and clear
-		if ($conf['allowdebug']) {
-			print "\n";
-			readfile(DOKU_TMP_DATA . 'cache/debug.log');
-			unlink(DOKU_TMP_DATA . 'cache/debug.log');
-		}
-	}
+ * copy data and add pages to the index.
+ */
+    public static function setUpBeforeClass() {
+        parent::setUpBeforeClass();
+        global $conf;
+        $conf['allowdebug'] = 1;
+        TestUtils::rcopy(TMP_DIR, dirname(__FILE__) . '/data/');
+        dbglog("\nset up class syntax_plugin_geotag_test");
+    }
+    function setUp() {
+        parent::setUp();
+        global $conf;
+        $conf['allowdebug'] = 1;
+        $conf['cachetime'] = -1;
+        $data = array();
+        search($data, $conf['datadir'], 'search_allpages', array('skipacl' => true));
+        $verbose = false;
+        $force = false;
+        foreach ($data as $val) {
+            idx_addPage($val['id'], $verbose, $force);
+        }
+        if ($conf['allowdebug']) {
+            touch(DOKU_TMP_DATA . 'cache/debug.log');
+        }
+    }
+    public function tearDown() {
+        parent::tearDown();
+        global $conf;
+        // try to get the debug log after running the test, print and clear
+        if ($conf['allowdebug']) {
+            print "\n";
+            readfile(DOKU_TMP_DATA . 'cache/debug.log');
+            unlink(DOKU_TMP_DATA . 'cache/debug.log');
+        }
+    }
 
-	public function test_geotag() {
-		$request = new TestRequest();
-		$response = $request->get(array('id'=>'example'), '/doku.php');
+    public function test_geotag() {
+        $request = new TestRequest();
+        $response = $request->get(array('id'=>'example'), '/doku.php');
 //file_get_contents("example.html");
 
 //$handle=fopen('/tmp/data.html', 'w');
@@ -70,7 +70,7 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
 //close($handle);
 
 //print_r($response);\
-		$this->assertTrue(strpos($response->getContent(),
+        $this->assertTrue(strpos($response->getContent(),
 '<h1 class="sectionedit1" id="yalist_example">yalist example</h1>
 <div class="level1">
 <ol>
@@ -184,7 +184,7 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
 <pre class="code">.. If you try, the result will be rendered oddly.</pre>
 
 </div>') !== false,
-			'expected html snippet was not in the output'
-		);
-	}
+            'expected html snippet was not in the output'
+        );
+    }
 }
