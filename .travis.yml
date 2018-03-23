@@ -31,4 +31,4 @@ before_script:
 
 script:
   - if [ "$DOKUWIKI" = "master" ]; then PRESERVE_TMP=false phpunit --stderr --group plugin_yalist --verbose --debug; fi
-  - if [ "$DOKUWIKI" != "master" ]; then PRESERVE_TMP=false php ../phpunit-5.7.phar --stderr --plugin_yalist plugin_wrap --verbose --debug; fi
+  - if [ "$DOKUWIKI" != "master" ]; then PRESERVE_TMP=false php ../phpunit-5.7.phar --stderr --group plugin_yalist --verbose --debug; fi
