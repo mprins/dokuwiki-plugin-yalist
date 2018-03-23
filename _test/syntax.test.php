@@ -31,7 +31,7 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
         global $conf;
         $conf['allowdebug'] = 1;
         TestUtils::rcopy(TMP_DIR, dirname(__FILE__) . '/data/');
-        dbglog("\nset up class syntax_plugin_geotag_test");
+        dbglog("\nset up class syntax_plugin_yalist_test");
     }
     function setUp() {
         parent::setUp();
