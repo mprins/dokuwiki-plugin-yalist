@@ -6,11 +6,9 @@ php:
   - "7.1"
   - "7.0"
   - "5.6"
-  - "hhvm"
 
 matrix:
   allow_failures:
-    - php: "hhvm"
     - php: "7.2"
       env: DOKUWIKI=stable
     - php: "7.1"
@@ -19,6 +17,7 @@ matrix:
 env:
   - DOKUWIKI=master
   - DOKUWIKI=stable
+  - DOKUWIKI=old-stable
 
 before_install:
   - wget https://raw.github.com/splitbrain/dokuwiki-travis/master/travis.sh
@@ -26,5 +25,10 @@ before_install:
 install:
   - sh travis.sh
 
+before_script:
+  - wget https://phar.phpunit.de/phpunit-5.7.phar
+  - cd _test
+
 script:
-  - cd _test && PRESERVE_TMP=false phpunit --stderr --group plugin_backlinks --verbose --debug
+  - if [ "$DOKUWIKI" = "master" ]; then PRESERVE_TMP=false phpunit --stderr --group plugin_yalist --verbose --debug; fi
+  - if [ "$DOKUWIKI" != "master" ]; then PRESERVE_TMP=false php ../phpunit-5.7.phar --stderr --plugin_yalist plugin_wrap --verbose --debug; fi
