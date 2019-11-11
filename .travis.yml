@@ -10,11 +10,6 @@ php:
 env:
   - DOKUWIKI=master
   - DOKUWIKI=stable
-  - DOKUWIKI=old-stable
-
-matrix:
-  allow_failures:
-    - env: DOKUWIKI=old-stable
 
 before_install:
   - wget https://raw.github.com/splitbrain/dokuwiki-travis/master/travis.sh
