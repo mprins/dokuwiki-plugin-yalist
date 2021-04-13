@@ -1,7 +1,7 @@
 base    yalist
 author  Mark C. Prins, previously Ben Slusky
 email   mprins@users.sf.net
-date    2016-08-29
+date    2021-04-14
 name    Simple universal list plugin
 desc    Extend DokuWiki list syntax to allow definition list and multiple paragraphs in a list entry
 url     https://www.dokuwiki.org/plugin:yalist
