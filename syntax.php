@@ -21,46 +21,45 @@
  * @author     Ben Slusky <sluskyb@paranoiacs.org>
  *
  */
-if (!defined('DOKU_INC')) {
-    define('DOKU_INC', realpath(dirname(__FILE__) . '/../../') . '/');
-}
-if (!defined('DOKU_PLUGIN')) {
-    define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
-}
-require_once(DOKU_PLUGIN . 'syntax.php');
 class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
-    var $stack = array();
-    static $odt_table_stack = array();
-    static $odt_table_stack_index = 0;
+    private $stack = array();
+    private static $odt_table_stack = array();
+    private static $odt_table_stack_index = 0;
 
-    function getType() {
+    public function getType() {
         return 'container';
     }
-    function getSort() {
+
+    public function getSort() {
         // just before listblock (10)
         return 9;
     }
-    function getPType() {
+
+    public function getPType() {
         return 'block';
     }
-    function getAllowedTypes() {
+
+    public function getAllowedTypes() {
         return array('substition', 'protected', 'disabled', 'formatting');
     }
-    function connectTo($mode) {
+
+    public function connectTo($mode) {
         $this->Lexer->addEntryPattern('\n {2,}(?:--?|\*\*?|\?|::?)', $mode, 'plugin_yalist');
         $this->Lexer->addEntryPattern('\n\t{1,}(?:--?|\*\*?|\?|::?)', $mode, 'plugin_yalist');
         $this->Lexer->addPattern('\n {2,}(?:--?|\*\*?|\?|::?|\.\.)', 'plugin_yalist');
         $this->Lexer->addPattern('\n\t{1,}(?:--?|\*\*?|\?|::?|\.\.)', 'plugin_yalist');
     }
-    function postConnect() {
+
+    public function postConnect() {
         $this->Lexer->addExitPattern('\n', 'plugin_yalist');
     }
-    function handle($match, $state, $pos, Doku_Handler $handler) {
+
+    public function handle($match, $state, $pos, Doku_Handler $handler) {
         $output = array();
         $level = 0;
         switch ($state) {
             case DOKU_LEXER_ENTER:
-                $frame = $this->_interpret_match($match);
+                $frame = $this->interpretMatch($match);
                 $level = $frame['level'] = 1;
                 array_push($output,
                             "${frame['list']}_open",
@@ -126,7 +125,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 }
                 break;
             }
-            $curr_frame = $this->_interpret_match($match);
+            $curr_frame = $this->interpretMatch($match);
             if ($curr_frame['depth'] > $last_frame['depth']) {
                 // going one level deeper
                 $level = $last_frame['level'] + 1;
@@ -195,7 +194,8 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         }
         return array('state' => $state, 'output' => $output, 'level' => $level);
     }
-    function _interpret_match($match) {
+
+    private function interpretMatch($match) {
         $tag_table = array(
             '*' => 'u_li',
             '-' => 'o_li',
@@ -211,7 +211,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         );
     }
 
-    function render($mode, Doku_Renderer $renderer, $data) {
+    public function render($mode, Doku_Renderer $renderer, $data) {
         if ($mode != 'xhtml' && $mode != 'latex' && $mode != 'odt') {
                     return false;
         }
@@ -226,13 +226,13 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         foreach ($data['output'] as $i) {
             switch ($mode) {
                 case 'xhtml':
-                    $this->render_xhtml_item($renderer, $i, $data);
+                    $this->renderXhtmlItem($renderer, $i, $data);
                 break;
                 case 'latex':
-                    $this->render_latex_item($renderer, $i, $data);
+                    $this->renderLatexItem($renderer, $i, $data);
                 break;
                 case 'odt':
-                    $this->render_odt_item($renderer, $i, $data);
+                    $this->renderOdtItem($renderer, $i, $data);
                 break;
             }
         }
@@ -246,7 +246,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         return true;
     }
 
-    function render_xhtml_item(Doku_Renderer $renderer, $item) {
+    private function renderXhtmlItem(Doku_Renderer $renderer, $item, $data) {
         $markup = '';
         switch ($item) {
             case 'ol_open':
@@ -313,7 +313,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         $renderer->doc .= $markup;
     }
 
-    function render_latex_item(Doku_Renderer $renderer, $item) {
+    private function renderLatexItem(Doku_Renderer $renderer, $item) {
         $markup = '';
         switch ($item) {
             case 'ol_open':
@@ -381,7 +381,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
      *
      * @author LarsDW223
      */
-    function render_odt_item(Doku_Renderer $renderer, $item) {
+    private function renderOdtItem(Doku_Renderer $renderer, $item) {
         switch ($item) {
             case 'ol_open':
                 $renderer->listo_open();
@@ -648,7 +648,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
      *
      * @author LarsDW223
      */
-    function renderODTOpenSpan($renderer) {
+    private function renderODTOpenSpan($renderer) {
         $properties = array();
 
         // Get CSS properties for ODT export.
@@ -664,7 +664,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
      *
      * @author LarsDW223
      */
-    function renderODTCloseSpan($renderer) {
+    private function renderODTCloseSpan($renderer) {
         if (method_exists($renderer, '_odtSpanClose') === false) {
             // Function is not supported by installed ODT plugin version, return.
             return;

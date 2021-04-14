@@ -26,14 +26,14 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
 /**
  * copy data and add pages to the index.
  */
-    public static function setUpBeforeClass() {
+    public static function setUpBeforeClass(): void {
         parent::setUpBeforeClass();
         global $conf;
         $conf['allowdebug'] = 1;
         TestUtils::rcopy(TMP_DIR, dirname(__FILE__) . '/data/');
         dbglog("\nset up class syntax_plugin_yalist_test");
     }
-    function setUp() {
+    function setUp(): void {
         parent::setUp();
         global $conf;
         $conf['allowdebug'] = 1;
@@ -49,7 +49,7 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
             touch(DOKU_TMP_DATA . 'cache/debug.log');
         }
     }
-    public function tearDown() {
+    public function tearDown(): void {
         parent::tearDown();
         global $conf;
         // try to get the debug log after running the test, print and clear
@@ -60,43 +60,43 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
         }
     }
 
-    public function test_geotag() {
+    public function testExample(): void {
         $request = new TestRequest();
         $response = $request->get(array('id'=>'example'), '/doku.php');
-//file_get_contents("example.html");
 
-//$handle=fopen('/tmp/data.html', 'w');
-//fwrite($handle, $response->getContent());
-//close($handle);
+        // save the response html
+        //$handle=fopen('/tmp/data.html', 'w');
+        //fwrite($handle, $response->getContent());
+        //fclose($handle);
 
-//print_r($response);\
+        //print_r($response);
         $this->assertTrue(strpos($response->getContent(),
 '<h1 class="sectionedit1" id="yalist_example">yalist example</h1>
 <div class="level1">
 <ol>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
  Ordered list item 1
 </div></li>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
  Ordered list item 2
 </div></li>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
 <p>
  Ordered list item 3…
 </p><p>
  … in multiple paragraphs
 </p>
 </div></li>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
  Ordered list item 4
 </div></li>
 </ol>
 
 <ul>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
  Unordered list item
 </div></li>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
 <p>
  Unordered list item…
 </p><p>
@@ -106,28 +106,28 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
 </ul>
 
 <ol>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
  Ordered list, first level
 </div><ol>
-<li class="level"><div class="li">
+<li class="level2"><div class="li">
  Second level
 </div><ol>
-<li class="level"><div class="li">
+<li class="level3"><div class="li">
  Third level
 </div><ol>
-<li class="level"><div class="li">
+<li class="level4"><div class="li">
  Fourth level
 </div></li>
 </ol>
 </li>
 </ol>
 </li>
-<li class="level"><div class="li">
+<li class="level2"><div class="li">
 <p>
  Back to second level
 </p>
 </div><ol>
-<li class="level"><div class="li">
+<li class="level3"><div class="li">
  <em>Second?! What happened to third?</em>
 </div></li>
 </ol>
@@ -138,32 +138,32 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
 </div></li>
 </ol>
 </li>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
  Back to first level
 </div></li>
-<li class="level"><div class="li">
+<li class="level1"><div class="li">
  Still at first level
 </div></li>
 </ol>
 
 <dl>
-<dt class="level"><span class="dt"> Definition list</span></dt>
-<dd class="level"><div class="dd">
+<dt class="level1"><span class="dt"> Definition list</span></dt>
+<dd class="level1"><div class="dd">
  Definition lists vary only slightly from other types of lists in that list items consist of two parts: a term and a description. The term is given by the DT element and is restricted to inline content. The description is given with a DD element that contains block-level content. [Source: <abbr title="World Wide Web Consortium">W3C</abbr>]
 </div></dd>
-<dt class="level"><span class="dt"> Definition list w/ multiple paragraphs</span></dt>
-<dd class="level"><div class="dd">
+<dt class="level1"><span class="dt"> Definition list w/ multiple paragraphs</span></dt>
+<dd class="level1"><div class="dd">
 <p>
  The style sheet provided with this plugin will render these paragraphs…
 </p><p>
  … to the left of the term being defined.
 </p>
 </div><dl>
-<dt class="level"><span class="dt"> Definition list w/ multiple “paragraphs”</span></dt>
-<dd class="level"><div class="dd">
+<dt class="level2"><span class="dt"> Definition list w/ multiple “paragraphs”</span></dt>
+<dd class="level2"><div class="dd">
  Another way to separate blocks of text in a definition…
 </div></dd>
-<dd class="level"><div class="dd">
+<dd class="level2"><div class="dd">
  … is to simply have multiple definitions for a term (or group of terms).
 </div></dd>
 </dl>
@@ -171,14 +171,14 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
 </dl>
 
 <dl>
-<dd class="level"><div class="dd">
+<dd class="level1"><div class="dd">
  This definition list has DD tags without any preceding DT tags.
 </div></dd>
-<dd class="level"><div class="dd">
+<dd class="level1"><div class="dd">
  Hey, it&#039;s legal XHTML.
 </div></dd>
-<dt class="level"><span class="dt"> Just like DT tags without following DD tags.</span></dt>
-<dt class="level"><span class="dt">? But DT tags can&#039;t contain paragraphs. That would <em class="u">not</em> be legal XHTML.</span></dt>
+<dt class="level1"><span class="dt"> Just like DT tags without following DD tags.</span></dt>
+<dt class="level1"><span class="dt">? But DT tags can&#039;t contain paragraphs. That would <em class="u">not</em> be legal XHTML.</span></dt>
 </dl>
 
 <pre class="code">.. If you try, the result will be rendered oddly.</pre>
