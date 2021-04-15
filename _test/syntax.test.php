@@ -14,6 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
 /**
  * Syntax tests for the yalist plugin.
  *
@@ -23,9 +24,9 @@
 class syntax_plugin_yalist_test extends DokuWikiTest {
     protected $pluginsEnabled = array('yalist');
 
-/**
- * copy data and add pages to the index.
- */
+    /**
+     * copy data and add pages to the index.
+     */
     public static function setUpBeforeClass(): void {
         parent::setUpBeforeClass();
         global $conf;
@@ -33,27 +34,29 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
         TestUtils::rcopy(TMP_DIR, dirname(__FILE__) . '/data/');
         dbglog("\nset up class syntax_plugin_yalist_test");
     }
+
     function setUp(): void {
         parent::setUp();
         global $conf;
         $conf['allowdebug'] = 1;
-        $conf['cachetime'] = -1;
-        $data = array();
+        $conf['cachetime']  = -1;
+        $data               = array();
         search($data, $conf['datadir'], 'search_allpages', array('skipacl' => true));
         $verbose = false;
-        $force = false;
-        foreach ($data as $val) {
+        $force   = false;
+        foreach($data as $val) {
             idx_addPage($val['id'], $verbose, $force);
         }
-        if ($conf['allowdebug']) {
+        if($conf['allowdebug']) {
             touch(DOKU_TMP_DATA . 'cache/debug.log');
         }
     }
+
     public function tearDown(): void {
         parent::tearDown();
         global $conf;
         // try to get the debug log after running the test, print and clear
-        if ($conf['allowdebug']) {
+        if($conf['allowdebug']) {
             print "\n";
             readfile(DOKU_TMP_DATA . 'cache/debug.log');
             unlink(DOKU_TMP_DATA . 'cache/debug.log');
@@ -61,8 +64,8 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
     }
 
     public function testExample(): void {
-        $request = new TestRequest();
-        $response = $request->get(array('id'=>'example'), '/doku.php');
+        $request  = new TestRequest();
+        $response = $request->get(array('id' => 'example'), '/doku.php');
 
         // save the response html
         //$handle=fopen('/tmp/data.html', 'w');
@@ -70,8 +73,10 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
         //fclose($handle);
 
         //print_r($response);
-        $this->assertTrue(strpos($response->getContent(),
-'<h1 class="sectionedit1" id="yalist_example">yalist example</h1>
+        $this->assertNotFalse(
+            strpos(
+                $response->getContent(),
+                '<h1 class="sectionedit1" id="yalist_example">yalist example</h1>
 <div class="level1">
 <ol>
 <li class="level1"><div class="li">
@@ -183,8 +188,8 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
 
 <pre class="code">.. If you try, the result will be rendered oddly.</pre>
 
-</div>') !== false,
-            'expected html snippet was not in the output'
+</div>'
+            ), 'expected html snippet was not in the output'
         );
     }
 }
