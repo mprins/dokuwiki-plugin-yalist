@@ -54,9 +54,8 @@ class general_plugin_yalist_test extends DokuWikiTest {
      */
     public function test_plugin_yalist_isloaded(): void {
         global $plugin_controller;
-        $this->assertTrue(
-                    in_array('yalist', $plugin_controller->getList()),
-                    "yalist plugin is loaded"
-                            );
+        $this->assertContains(
+            'yalist', $plugin_controller->getList(), "yalist plugin is loaded"
+        );
     }
 }

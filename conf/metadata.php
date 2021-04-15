@@ -1,6 +1,6 @@
 <?php
 /**
- * Options for the yalist plugin
+ * Options for the yalist plugin.
  *
  * @author LarsDW223
  */
