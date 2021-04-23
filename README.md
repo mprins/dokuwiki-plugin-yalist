@@ -18,7 +18,7 @@ and list items with multiple paragraphs. The complete syntax is as follows:
 
 Lists can be nested within lists, just as in the standard DokuWiki syntax.
 
-
+----
 [![CI](https://github.com/mprins/dokuwiki-yalist-plugin/actions/workflows/CI.yml/badge.svg)](https://github.com/mprins/dokuwiki-yalist-plugin/actions/workflows/CI.yml)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/mprins/dokuwiki-yalist-plugin/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/mprins/dokuwiki-yalist-plugin/?branch=master)
 [![GitHub issues](https://img.shields.io/github/issues/mprins/dokuwiki-yalist-plugin.svg)](https://github.com/mprins/dokuwiki-yalist-plugin/issues)
