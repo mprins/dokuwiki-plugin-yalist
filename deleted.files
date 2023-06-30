@@ -1,0 +1,9 @@
+_test/action.test.php
+_test/general.test.php
+_test/data/pages/example.txt
+
+.github/workflows/phpCS.yml
+.github/workflows/maintenance.yml
+.github/workflows/CI.yml
+.github/dependabot.yml
+.github/ISSUE_TEMPLATE.md
