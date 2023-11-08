@@ -1,5 +1,7 @@
 <?php
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 /*
  * This plugin extends DokuWiki's list markup syntax to allow definition lists
  * and list items with multiple paragraphs. The complete syntax is as follows:
@@ -22,111 +24,107 @@
  * @author     Ben Slusky <sluskyb@paranoiacs.org>
  *
  */
-
-class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
-    private static $odt_table_stack = array();
+class syntax_plugin_yalist extends SyntaxPlugin
+{
+    private static $odt_table_stack = [];
     private static $odt_table_stack_index = 0;
-    private $stack = array();
+    private $stack = [];
 
-    public function getType() {
+    public function getType()
+    {
         return 'container';
     }
 
-    public function getSort() {
+    public function getSort()
+    {
         // just before listblock (10)
         return 9;
     }
 
-    public function getPType() {
+    public function getPType()
+    {
         return 'block';
     }
 
-    public function getAllowedTypes() {
-        return array('substition', 'protected', 'disabled', 'formatting');
+    public function getAllowedTypes()
+    {
+        return ['substition', 'protected', 'disabled', 'formatting'];
     }
 
-    public function connectTo($mode) {
+    public function connectTo($mode)
+    {
         $this->Lexer->addEntryPattern('\n {2,}(?:--?|\*\*?|\?|::?)', $mode, 'plugin_yalist');
         $this->Lexer->addEntryPattern('\n\t{1,}(?:--?|\*\*?|\?|::?)', $mode, 'plugin_yalist');
         $this->Lexer->addPattern('\n {2,}(?:--?|\*\*?|\?|::?|\.\.)', 'plugin_yalist');
         $this->Lexer->addPattern('\n\t{1,}(?:--?|\*\*?|\?|::?|\.\.)', 'plugin_yalist');
     }
 
-    public function postConnect() {
+    public function postConnect()
+    {
         $this->Lexer->addExitPattern('\n', 'plugin_yalist');
     }
 
-    public function handle($match, $state, $pos, Doku_Handler $handler) {
-        $output = array();
+    public function handle($match, $state, $pos, Doku_Handler $handler)
+    {
+        $output = [];
         $level  = 0;
-        switch($state) {
+        switch ($state) {
             case DOKU_LEXER_ENTER:
                 $frame = $this->interpretMatch($match);
                 $level = $frame['level'] = 1;
-                array_push(
-                    $output,
-                    "${frame['list']}_open",
-                    "${frame['item']}_open",
-                    "${frame['item']}_content_open"
-                );
-                if($frame['paras']) {
-                    array_push($output, 'p_open');
+                $output[] = "${frame['list']}_open";
+                $output[] = "${frame['item']}_open";
+                $output[] = "${frame['item']}_content_open";
+                if ($frame['paras']) {
+                    $output[] = 'p_open';
                 }
-                array_push($this->stack, $frame);
+                $this->stack[] = $frame;
                 break;
             case DOKU_LEXER_EXIT:
                 $close_content = true;
-                while($frame = array_pop($this->stack)) {
+                while ($frame = array_pop($this->stack)) {
                     // for the first frame we pop off the stack, we'll need to
                     // close the content tag; for the rest it will have been
                     // closed already
-                    if($close_content) {
-                        if($frame['paras']) {
-                            array_push($output, 'p_close');
+                    if ($close_content) {
+                        if ($frame['paras']) {
+                            $output[] = 'p_close';
                         }
-                        array_push($output, "${frame['item']}_content_close");
+                        $output[] = "${frame['item']}_content_close";
                         $close_content = false;
                     }
-                    array_push(
-                        $output,
-                        "${frame['item']}_close",
-                        "${frame['list']}_close"
-                    );
+                    $output[] = "${frame['item']}_close";
+                    $output[] = "${frame['list']}_close";
                 }
                 break;
             case DOKU_LEXER_MATCHED:
                 $last_frame = end($this->stack);
-                if(substr($match, -2) == '..') {
+                if (substr($match, -2) == '..') {
                     // new paragraphs cannot be deeper than the current depth,
                     // but they may be shallower
                     $para_depth    = count(explode('  ', str_replace("\t", '  ', $match)));
                     $close_content = true;
-                    while($para_depth < $last_frame['depth'] && count($this->stack) > 1) {
-                        if($close_content) {
-                            if($last_frame['paras']) {
-                                array_push($output, 'p_close');
+                    while ($para_depth < $last_frame['depth'] && count($this->stack) > 1) {
+                        if ($close_content) {
+                            if ($last_frame['paras']) {
+                                $output[] = 'p_close';
                             }
-                            array_push($output, "${last_frame['item']}_content_close");
+                            $output[] = "${last_frame['item']}_content_close";
                             $close_content = false;
                         }
-                        array_push(
-                            $output,
-                            "${last_frame['item']}_close",
-                            "${last_frame['list']}_close"
-                        );
+                        $output[] = "${last_frame['item']}_close";
+                        $output[] = "${last_frame['list']}_close";
                         array_pop($this->stack);
                         $last_frame = end($this->stack);
                     }
-                    if($last_frame['paras']) {
-                        if($close_content) {
+                    if ($last_frame['paras']) {
+                        if ($close_content) {
                             // depth did not change
-                            array_push($output, 'p_close', 'p_open');
+                            $output[] = 'p_close';
+                            $output[] = 'p_open';
                         } else {
-                            array_push(
-                                $output,
-                                "${last_frame['item']}_content_open",
-                                'p_open'
-                            );
+                            $output[] = "${last_frame['item']}_content_open";
+                            $output[] = 'p_open';
                         }
                     } else {
                         // let's just pretend we didn't match...
@@ -136,39 +134,35 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                     break;
                 }
                 $curr_frame = $this->interpretMatch($match);
-                if($curr_frame['depth'] > $last_frame['depth']) {
+                if ($curr_frame['depth'] > $last_frame['depth']) {
                     // going one level deeper
                     $level = $last_frame['level'] + 1;
-                    if($last_frame['paras']) {
-                        array_push($output, 'p_close');
+                    if ($last_frame['paras']) {
+                        $output[] = 'p_close';
                     }
-                    array_push(
-                        $output,
-                        "${last_frame['item']}_content_close",
-                        "${curr_frame['list']}_open"
-                    );
+                    $output[] = "${last_frame['item']}_content_close";
+                    $output[] = "${curr_frame['list']}_open";
                 } else {
                     // same depth, or getting shallower
                     $close_content = true;
                     // keep popping frames off the stack until we find a frame
                     // that's at least as deep as this one, or until only the
                     // bottom frame (i.e. the initial list markup) remains
-                    while($curr_frame['depth'] < $last_frame['depth'] &&
-                        count($this->stack) > 1) {
+                    while (
+                        $curr_frame['depth'] < $last_frame['depth'] &&
+                        count($this->stack) > 1
+                    ) {
                         // again, we need to close the content tag only for
                         // the first frame popped off the stack
-                        if($close_content) {
-                            if($last_frame['paras']) {
-                                array_push($output, 'p_close');
+                        if ($close_content) {
+                            if ($last_frame['paras']) {
+                                $output[] = 'p_close';
                             }
-                            array_push($output, "${last_frame['item']}_content_close");
+                            $output[] = "${last_frame['item']}_content_close";
                             $close_content = false;
                         }
-                        array_push(
-                            $output,
-                            "${last_frame['item']}_close",
-                            "${last_frame['list']}_close"
-                        );
+                        $output[] = "${last_frame['item']}_close";
+                        $output[] = "${last_frame['list']}_close";
                         array_pop($this->stack);
                         $last_frame = end($this->stack);
                     }
@@ -176,72 +170,58 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                     // it will be replaced by the current frame
                     array_pop($this->stack);
                     $level = $last_frame['level'];
-                    if($close_content) {
-                        if($last_frame['paras']) {
-                            array_push($output, 'p_close');
+                    if ($close_content) {
+                        if ($last_frame['paras']) {
+                            $output[] = 'p_close';
                         }
-                        array_push($output, "${last_frame['item']}_content_close");
+                        $output[] = "${last_frame['item']}_content_close";
                         $close_content = false;
                     }
-                    array_push($output, "${last_frame['item']}_close");
-                    if($curr_frame['list'] != $last_frame['list']) {
+                    $output[] = "${last_frame['item']}_close";
+                    if ($curr_frame['list'] != $last_frame['list']) {
                         // change list types
-                        array_push(
-                            $output,
-                            "${last_frame['list']}_close",
-                            "${curr_frame['list']}_open"
-                        );
+                        $output[] = "${last_frame['list']}_close";
+                        $output[] = "${curr_frame['list']}_open";
                     }
                 }
                 // and finally, open tags for the new list item
-                array_push(
-                    $output,
-                    "${curr_frame['item']}_open",
-                    "${curr_frame['item']}_content_open"
-                );
-                if($curr_frame['paras']) {
-                    array_push($output, 'p_open');
+                $output[] = "${curr_frame['item']}_open";
+                $output[] = "${curr_frame['item']}_content_open";
+                if ($curr_frame['paras']) {
+                    $output[] = 'p_open';
                 }
                 $curr_frame['level'] = $level;
-                array_push($this->stack, $curr_frame);
+                $this->stack[] = $curr_frame;
                 break;
             case DOKU_LEXER_UNMATCHED:
                 $output = $match;
                 break;
         }
-        return array('state' => $state, 'output' => $output, 'level' => $level);
+        return ['state' => $state, 'output' => $output, 'level' => $level];
     }
 
-    private function interpretMatch($match) {
-        $tag_table = array(
-            '*' => 'u_li',
-            '-' => 'o_li',
-            '?' => 'dt',
-            ':' => 'dd',
-        );
+    private function interpretMatch($match)
+    {
+        $tag_table = ['*' => 'u_li', '-' => 'o_li', '?' => 'dt', ':' => 'dd'];
         $tag       = $tag_table[substr($match, -1)];
-        return array(
-            'depth' => count(explode('  ', str_replace("\t", '  ', $match))),
-            'list'  => substr($tag, 0, 1) . 'l',
-            'item'  => substr($tag, -2),
-            'paras' => (substr($match, -1) == substr($match, -2, 1)),
-        );
+        return ['depth' => count(explode('  ', str_replace("\t", '  ', $match))), 'list'  => substr($tag, 0, 1) . 'l', 'item'  => substr($tag, -2), 'paras' => (substr($match, -1) === substr($match, -2, 1))];
     }
 
-    public function render($format, Doku_Renderer $renderer, $data) {
-        if($format != 'xhtml' && $format != 'latex' && $format != 'odt') {
+    public function render($format, Doku_Renderer $renderer, $data)
+    {
+        if ($format != 'xhtml' && $format != 'latex' && $format != 'odt') {
             return false;
         }
-        if($data['state'] == DOKU_LEXER_UNMATCHED) {
-            if($format != 'odt') {
+        if ($data['state'] == DOKU_LEXER_UNMATCHED) {
+            if ($format != 'odt') {
                 $renderer->doc .= $renderer->_xmlEntities($data['output']);
             } else {
                 $renderer->cdata($data['output']);
             }
             return true;
         }
-        foreach($data['output'] as $i) {
-            switch($format) {
+        foreach ($data['output'] as $i) {
+            switch ($format) {
                 case 'xhtml':
                     $this->renderXhtmlItem($renderer, $i, $data);
                     break;
@@ -253,8 +233,8 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                     break;
             }
         }
-        if($data['state'] == DOKU_LEXER_EXIT) {
-            if($format != 'odt') {
+        if ($data['state'] == DOKU_LEXER_EXIT) {
+            if ($format != 'odt') {
                 $renderer->doc .= "\n";
             } else {
                 $renderer->linebreak();
@@ -263,9 +243,10 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         return true;
     }
 
-    private function renderXhtmlItem(Doku_Renderer $renderer, $item, $data) {
+    private function renderXhtmlItem(Doku_Renderer $renderer, $item, $data)
+    {
         $markup = '';
-        switch($item) {
+        switch ($item) {
             case 'ol_open':
                 $markup = "<ol>\n";
                 break;
@@ -328,9 +309,10 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         $renderer->doc .= $markup;
     }
 
-    private function renderLatexItem(Doku_Renderer $renderer, $item) {
+    private function renderLatexItem(Doku_Renderer $renderer, $item)
+    {
         $markup = '';
-        switch($item) {
+        switch ($item) {
             case 'ol_open':
                 $markup = "\\begin{enumerate}\n";
                 break;
@@ -353,7 +335,6 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 $markup = "\item ";
                 break;
             case 'li_content_open':
-                break;
             case 'li_content_close':
                 break;
             case 'li_close':
@@ -363,24 +344,17 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 $markup = "\item[";
                 break;
             case 'dt_content_open':
-                break;
             case 'dt_content_close':
                 break;
             case 'dt_close':
                 $markup = "] ";
                 break;
             case 'dd_open':
-                break;
             case 'dd_content_open':
-                break;
             case 'dd_content_close':
                 break;
             case 'dd_close':
-                $markup = "\n";
-                break;
             case 'p_open':
-                $markup = "\n";
-                break;
             case 'p_close':
                 $markup = "\n";
                 break;
@@ -396,8 +370,9 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
      *
      * @author LarsDW223
      */
-    private function renderOdtItem(Doku_Renderer $renderer, $item) {
-        switch($item) {
+    private function renderOdtItem(Doku_Renderer $renderer, $item)
+    {
+        switch ($item) {
             case 'ol_open':
                 $renderer->listo_open();
                 break;
@@ -405,12 +380,12 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 $renderer->listu_open();
                 break;
             case 'dl_open':
-                if($this->getConf('def_list_odt_export') != 'table') {
+                if ($this->getConf('def_list_odt_export') != 'table') {
                     $renderer->listu_open();
                 } else {
                     $renderer->table_open(2);
                 }
-                self::$odt_table_stack [self::$odt_table_stack_index]             = array();
+                self::$odt_table_stack [self::$odt_table_stack_index]             = [];
                 self::$odt_table_stack [self::$odt_table_stack_index]['itemOpen'] = false;
                 self::$odt_table_stack [self::$odt_table_stack_index]['dtState']  = 0;
                 self::$odt_table_stack [self::$odt_table_stack_index]['ddState']  = 0;
@@ -422,9 +397,9 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 break;
             case 'dl_close':
                 $config = $this->getConf('def_list_odt_export');
-                if($config != 'table') {
-                    if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] != 2) {
-                        if($config == 'listheader' && method_exists($renderer, 'listheader_close')) {
+                if ($config != 'table') {
+                    if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] != 2) {
+                        if ($config == 'listheader' && method_exists($renderer, 'listheader_close')) {
                             $renderer->listheader_close();
                         } else {
                             $renderer->listitem_close();
@@ -433,20 +408,20 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                     self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 0;
                     $renderer->list_close();
                 } else {
-                    if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] == 0) {
-                        $properties            = array();
+                    if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] == 0) {
+                        $properties            = [];
                         $properties ['border'] = 'none';
                         $renderer->_odtTableCellOpenUseProperties($properties);
                         $renderer->tablecell_close();
                     }
                     self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 0;
-                    if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                    if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                         $renderer->tablerow_close(1);
                         self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                     }
                     $renderer->table_close();
                 }
-                if(self::$odt_table_stack_index > 0) {
+                if (self::$odt_table_stack_index > 0) {
                     self::$odt_table_stack_index--;
                     unset(self::$odt_table_stack [self::$odt_table_stack_index]);
                 }
@@ -466,18 +441,18 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 break;
 
             case 'dt_open': // unconditional: DT tags can't contain paragraphs. That would not be legal XHTML.
-                switch($this->getConf('def_list_odt_export')) {
+                switch ($this->getConf('def_list_odt_export')) {
                     case 'listheader':
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
-                            if(method_exists($renderer, 'listheader_close')) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            if (method_exists($renderer, 'listheader_close')) {
                                 $renderer->listheader_close();
                             } else {
                                 $renderer->listitem_close();
                             }
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
-                            if(method_exists($renderer, 'listheader_open')) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            if (method_exists($renderer, 'listheader_open')) {
                                 $renderer->listheader_open(1);
                             } else {
                                 $renderer->listitem_open(1);
@@ -486,31 +461,31 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                         }
                         break;
                     case 'table':
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] == 0) {
-                            $properties            = array();
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] == 0) {
+                            $properties            = [];
                             $properties ['border'] = 'none';
                             $renderer->_odtTableCellOpenUseProperties($properties);
                             $renderer->tablecell_close();
                         }
 
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                             $renderer->tablerow_close();
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
                             $renderer->tablerow_open(1);
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
-                        $properties            = array();
+                        $properties            = [];
                         $properties ['border'] = 'none';
                         $renderer->_odtTableCellOpenUseProperties($properties);
                         break;
                     default:
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                             $renderer->listitem_close();
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
                             $renderer->listitem_open(1);
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
@@ -520,10 +495,10 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 0;
                 break;
             case 'dd_open':
-                switch($this->getConf('def_list_odt_export')) {
+                switch ($this->getConf('def_list_odt_export')) {
                     case 'listheader':
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
-                            if(method_exists($renderer, 'listheader_open')) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                            if (method_exists($renderer, 'listheader_open')) {
                                 $renderer->listheader_open(1);
                             } else {
                                 $renderer->listitem_open(1);
@@ -532,26 +507,26 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                         }
                         break;
                     case 'table':
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
                             $renderer->tablerow_open(1);
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] == 1) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] == 1) {
                             $renderer->tablecell_close();
                         }
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] == 0) {
-                            $properties            = array();
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] == 0) {
+                            $properties            = [];
                             $properties ['border'] = 'none';
                             $renderer->_odtTableCellOpenUseProperties($properties);
                             $renderer->tablecell_close();
                         }
 
-                        $properties            = array();
+                        $properties            = [];
                         $properties ['border'] = 'none';
                         $renderer->_odtTableCellOpenUseProperties($properties);
                         break;
                     default:
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === false) {
                             $renderer->listitem_open(1);
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = true;
                         }
@@ -561,7 +536,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 1;
                 break;
             case 'dt_content_open':
-                switch($this->getConf('def_list_odt_export')) {
+                switch ($this->getConf('def_list_odt_export')) {
                     case 'table':
                         $renderer->p_open();
                         break;
@@ -572,7 +547,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 $this->renderODTOpenSpan($renderer);
                 break;
             case 'dd_content_open':
-                switch($this->getConf('def_list_odt_export')) {
+                switch ($this->getConf('def_list_odt_export')) {
                     case 'table':
                         $renderer->p_open();
                         break;
@@ -583,7 +558,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 break;
             case 'dt_content_close':
                 $this->renderODTCloseSpan($renderer);
-                switch($this->getConf('def_list_odt_export')) {
+                switch ($this->getConf('def_list_odt_export')) {
                     case 'table':
                         $renderer->p_close();
                         break;
@@ -593,7 +568,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 }
                 break;
             case 'dd_content_close':
-                switch($this->getConf('def_list_odt_export')) {
+                switch ($this->getConf('def_list_odt_export')) {
                     case 'table':
                         $renderer->p_close();
                         break;
@@ -603,7 +578,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 }
                 break;
             case 'dt_close':
-                switch($this->getConf('def_list_odt_export')) {
+                switch ($this->getConf('def_list_odt_export')) {
                     case 'listheader':
                         $renderer->linebreak();
                         break;
@@ -618,10 +593,10 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                 break;
 
             case 'dd_close':
-                switch($this->getConf('def_list_odt_export')) {
+                switch ($this->getConf('def_list_odt_export')) {
                     case 'listheader':
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
-                            if(method_exists($renderer, 'listheader_close')) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                            if (method_exists($renderer, 'listheader_close')) {
                                 $renderer->listheader_close();
                             } else {
                                 $renderer->listitem_close();
@@ -631,13 +606,13 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
                         break;
                     case 'table':
                         $renderer->tablecell_close();
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                             $renderer->tablerow_close(1);
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
                         break;
                     default:
-                        if(self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
+                        if (self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] === true) {
                             $renderer->listitem_close(1);
                             self::$odt_table_stack [self::$odt_table_stack_index - 1]['itemOpen'] = false;
                         }
@@ -663,8 +638,9 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
      *
      * @author LarsDW223
      */
-    private function renderODTOpenSpan($renderer) {
-        $properties = array();
+    private function renderODTOpenSpan($renderer)
+    {
+        $properties = [];
 
         // Get CSS properties for ODT export.
         $renderer->getODTProperties($properties, 'div', 'dokuwiki dt', null);
@@ -679,8 +655,9 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
      *
      * @author LarsDW223
      */
-    private function renderODTCloseSpan($renderer) {
-        if(method_exists($renderer, '_odtSpanClose') === false) {
+    private function renderODTCloseSpan($renderer)
+    {
+        if (method_exists($renderer, '_odtSpanClose') === false) {
             // Function is not supported by installed ODT plugin version, return.
             return;
         }
