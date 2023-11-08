@@ -228,12 +228,12 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
         );
     }
 
-    public function render($mode, Doku_Renderer $renderer, $data) {
-        if($mode != 'xhtml' && $mode != 'latex' && $mode != 'odt') {
+    public function render($format, Doku_Renderer $renderer, $data) {
+        if($format != 'xhtml' && $format != 'latex' && $format != 'odt') {
             return false;
         }
         if($data['state'] == DOKU_LEXER_UNMATCHED) {
-            if($mode != 'odt') {
+            if($format != 'odt') {
                 $renderer->doc .= $renderer->_xmlEntities($data['output']);
             } else {
                 $renderer->cdata($data['output']);
@@ -241,7 +241,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
             return true;
         }
         foreach($data['output'] as $i) {
-            switch($mode) {
+            switch($format) {
                 case 'xhtml':
                     $this->renderXhtmlItem($renderer, $i, $data);
                     break;
@@ -254,7 +254,7 @@ class syntax_plugin_yalist extends DokuWiki_Syntax_Plugin {
             }
         }
         if($data['state'] == DOKU_LEXER_EXIT) {
-            if($mode != 'odt') {
+            if($format != 'odt') {
                 $renderer->doc .= "\n";
             } else {
                 $renderer->linebreak();
