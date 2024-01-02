@@ -336,28 +336,24 @@ class syntax_plugin_yalist extends SyntaxPlugin
                 break;
             case 'li_content_open':
             case 'li_content_close':
+            case 'dt_content_close':
+            case 'dd_content_close':
                 break;
             case 'li_close':
+            case 'p_close':
                 $markup = "\n";
                 break;
             case 'dt_open':
                 $markup = "\item[";
                 break;
             case 'dt_content_open':
-            case 'dt_content_close':
-                break;
             case 'dt_close':
                 $markup = "] ";
                 break;
             case 'dd_open':
             case 'dd_content_open':
-            case 'dd_content_close':
-                break;
             case 'dd_close':
             case 'p_open':
-            case 'p_close':
-                $markup = "\n";
-                break;
         }
         $renderer->doc .= $markup;
     }
@@ -580,14 +576,12 @@ class syntax_plugin_yalist extends SyntaxPlugin
             case 'dt_close':
                 switch ($this->getConf('def_list_odt_export')) {
                     case 'listheader':
+                    default:
                         $renderer->linebreak();
                         break;
                     case 'table':
                         $renderer->tablecell_close();
                         self::$odt_table_stack [self::$odt_table_stack_index - 1]['dtState'] = 2;
-                        break;
-                    default:
-                        $renderer->linebreak();
                         break;
                 }
                 break;
