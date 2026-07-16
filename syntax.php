@@ -23,12 +23,13 @@ use dokuwiki\Extension\SyntaxPlugin;
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  * @author     Ben Slusky <sluskyb@paranoiacs.org>
  *
+ * @phpcs:disable Squiz.Classes.ValidClassName.NotPascalCase
  */
 class syntax_plugin_yalist extends SyntaxPlugin
 {
-    private static $odt_table_stack = [];
-    private static $odt_table_stack_index = 0;
-    private $stack = [];
+    private static array $odt_table_stack = [];
+    private static int $odt_table_stack_index = 0;
+    private array $stack = [];
 
     public function getType()
     {
@@ -72,9 +73,9 @@ class syntax_plugin_yalist extends SyntaxPlugin
             case DOKU_LEXER_ENTER:
                 $frame = $this->interpretMatch($match);
                 $level = $frame['level'] = 1;
-                $output[] = "${frame['list']}_open";
-                $output[] = "${frame['item']}_open";
-                $output[] = "${frame['item']}_content_open";
+                $output[] = "{$frame['list']}_open";
+                $output[] = "{$frame['item']}_open";
+                $output[] = "{$frame['item']}_content_open";
                 if ($frame['paras']) {
                     $output[] = 'p_open';
                 }
@@ -90,16 +91,16 @@ class syntax_plugin_yalist extends SyntaxPlugin
                         if ($frame['paras']) {
                             $output[] = 'p_close';
                         }
-                        $output[] = "${frame['item']}_content_close";
+                        $output[] = "{$frame['item']}_content_close";
                         $close_content = false;
                     }
-                    $output[] = "${frame['item']}_close";
-                    $output[] = "${frame['list']}_close";
+                    $output[] = "{$frame['item']}_close";
+                    $output[] = "{$frame['list']}_close";
                 }
                 break;
             case DOKU_LEXER_MATCHED:
                 $last_frame = end($this->stack);
-                if (substr($match, -2) == '..') {
+                if (str_ends_with($match, '..')) {
                     // new paragraphs cannot be deeper than the current depth,
                     // but they may be shallower
                     $para_depth    = count(explode('  ', str_replace("\t", '  ', $match)));
@@ -109,11 +110,11 @@ class syntax_plugin_yalist extends SyntaxPlugin
                             if ($last_frame['paras']) {
                                 $output[] = 'p_close';
                             }
-                            $output[] = "${last_frame['item']}_content_close";
+                            $output[] = "{$last_frame['item']}_content_close";
                             $close_content = false;
                         }
-                        $output[] = "${last_frame['item']}_close";
-                        $output[] = "${last_frame['list']}_close";
+                        $output[] = "{$last_frame['item']}_close";
+                        $output[] = "{$last_frame['list']}_close";
                         array_pop($this->stack);
                         $last_frame = end($this->stack);
                     }
@@ -123,7 +124,7 @@ class syntax_plugin_yalist extends SyntaxPlugin
                             $output[] = 'p_close';
                             $output[] = 'p_open';
                         } else {
-                            $output[] = "${last_frame['item']}_content_open";
+                            $output[] = "{$last_frame['item']}_content_open";
                             $output[] = 'p_open';
                         }
                     } else {
@@ -140,8 +141,8 @@ class syntax_plugin_yalist extends SyntaxPlugin
                     if ($last_frame['paras']) {
                         $output[] = 'p_close';
                     }
-                    $output[] = "${last_frame['item']}_content_close";
-                    $output[] = "${curr_frame['list']}_open";
+                    $output[] = "{$last_frame['item']}_content_close";
+                    $output[] = "{$curr_frame['list']}_open";
                 } else {
                     // same depth, or getting shallower
                     $close_content = true;
@@ -158,11 +159,11 @@ class syntax_plugin_yalist extends SyntaxPlugin
                             if ($last_frame['paras']) {
                                 $output[] = 'p_close';
                             }
-                            $output[] = "${last_frame['item']}_content_close";
+                            $output[] = "{$last_frame['item']}_content_close";
                             $close_content = false;
                         }
-                        $output[] = "${last_frame['item']}_close";
-                        $output[] = "${last_frame['list']}_close";
+                        $output[] = "{$last_frame['item']}_close";
+                        $output[] = "{$last_frame['list']}_close";
                         array_pop($this->stack);
                         $last_frame = end($this->stack);
                     }
@@ -174,19 +175,18 @@ class syntax_plugin_yalist extends SyntaxPlugin
                         if ($last_frame['paras']) {
                             $output[] = 'p_close';
                         }
-                        $output[] = "${last_frame['item']}_content_close";
-                        $close_content = false;
+                        $output[] = "{$last_frame['item']}_content_close";
                     }
-                    $output[] = "${last_frame['item']}_close";
+                    $output[] = "{$last_frame['item']}_close";
                     if ($curr_frame['list'] != $last_frame['list']) {
                         // change list types
-                        $output[] = "${last_frame['list']}_close";
-                        $output[] = "${curr_frame['list']}_open";
+                        $output[] = "{$last_frame['list']}_close";
+                        $output[] = "{$curr_frame['list']}_open";
                     }
                 }
                 // and finally, open tags for the new list item
-                $output[] = "${curr_frame['item']}_open";
-                $output[] = "${curr_frame['item']}_content_open";
+                $output[] = "{$curr_frame['item']}_open";
+                $output[] = "{$curr_frame['item']}_content_open";
                 if ($curr_frame['paras']) {
                     $output[] = 'p_open';
                 }
@@ -204,7 +204,9 @@ class syntax_plugin_yalist extends SyntaxPlugin
     {
         $tag_table = ['*' => 'u_li', '-' => 'o_li', '?' => 'dt', ':' => 'dd'];
         $tag       = $tag_table[substr($match, -1)];
-        return ['depth' => count(explode('  ', str_replace("\t", '  ', $match))), 'list'  => substr($tag, 0, 1) . 'l', 'item'  => substr($tag, -2), 'paras' => (substr($match, -1) === substr($match, -2, 1))];
+        return ['depth' => count(explode('  ', str_replace("\t", '  ', $match))),
+            'list'  => substr($tag, 0, 1) . 'l', 'item'  => substr($tag, -2),
+            'paras' => (substr($match, -1) === substr($match, -2, 1))];
     }
 
     public function render($format, Doku_Renderer $renderer, $data)
@@ -266,7 +268,7 @@ class syntax_plugin_yalist extends SyntaxPlugin
                 $markup = "</dl>\n";
                 break;
             case 'li_open':
-                $markup = "<li class=\"level${data['level']}\">";
+                $markup = "<li class=\"level{$data['level']}\">";
                 break;
             case 'li_content_open':
                 $markup = "<div class=\"li\">\n";
@@ -279,7 +281,7 @@ class syntax_plugin_yalist extends SyntaxPlugin
                 $markup = "</li>\n";
                 break;
             case 'dt_open':
-                $markup = "<dt class=\"level${data['level']}\">";
+                $markup = "<dt class=\"level{$data['level']}\">";
                 break;
             case 'dt_content_open':
                 $markup = "<span class=\"dt\">";
@@ -291,7 +293,7 @@ class syntax_plugin_yalist extends SyntaxPlugin
                 $markup = "</dt>\n";
                 break;
             case 'dd_open':
-                $markup = "<dd class=\"level${data['level']}\">";
+                $markup = "<dd class=\"level{$data['level']}\">";
                 break;
             case 'dd_content_open':
                 $markup = "<div class=\"dd\">\n";

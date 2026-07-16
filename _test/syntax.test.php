@@ -15,57 +15,63 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+use dokuwiki\Logger;
+use dokuwiki\Search\Indexer;
+
 /**
  * Syntax tests for the yalist plugin.
  *
  * @group plugin_yalist
  * @group plugins
  */
-class syntax_plugin_yalist_test extends DokuWikiTest {
+class syntax_plugin_yalist_test extends DokuWikiTest
+{
     protected $pluginsEnabled = array('yalist');
 
     /**
      * copy data and add pages to the index.
      */
-    public static function setUpBeforeClass(): void {
+    public static function setUpBeforeClass(): void
+    {
         parent::setUpBeforeClass();
         global $conf;
         $conf['allowdebug'] = 1;
         TestUtils::rcopy(TMP_DIR, dirname(__FILE__) . '/data/');
-        dbglog("\nset up class syntax_plugin_yalist_test");
+        Logger::debug("set up class syntax_plugin_yalist_test");
     }
 
-    function setUp(): void {
+    public function setUp(): void
+    {
         parent::setUp();
         global $conf;
         $conf['allowdebug'] = 1;
         $conf['cachetime']  = -1;
         $data               = array();
         search($data, $conf['datadir'], 'search_allpages', array('skipacl' => true));
-        $verbose = false;
-        $force   = false;
-        foreach($data as $val) {
-            idx_addPage($val['id'], $verbose, $force);
+        foreach ($data as $val) {
+            (new Indexer())->addPage($val['id']);
         }
-        if($conf['allowdebug']) {
+        if ($conf['allowdebug']) {
             touch(DOKU_TMP_DATA . 'cache/debug.log');
         }
     }
 
-    public function tearDown(): void {
+    public function tearDown(): void
+    {
         parent::tearDown();
         global $conf;
         // try to get the debug log after running the test, print and clear
-        if($conf['allowdebug']) {
+        if ($conf['allowdebug']) {
             print "\n";
             readfile(DOKU_TMP_DATA . 'cache/debug.log');
             unlink(DOKU_TMP_DATA . 'cache/debug.log');
         }
     }
 
-    public function testExample(): void {
+    public function testExample(): void
+    {
         $request  = new TestRequest();
-        $response = $request->get(array('id' => 'example'), '/doku.php');
+        $response = $request->get(array('id' => 'example'));
 
         // save the response html
         //$handle=fopen('/tmp/data.html', 'w');
@@ -189,7 +195,8 @@ class syntax_plugin_yalist_test extends DokuWikiTest {
 <pre class="code">.. If you try, the result will be rendered oddly.</pre>
 
 </div>'
-            ), 'expected html snippet was not in the output'
+            ),
+            'expected html snippet was not in the output'
         );
     }
 }
