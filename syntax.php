@@ -1,5 +1,6 @@
 <?php
 
+use dokuwiki\Parsing\Handler;
 use dokuwiki\Extension\SyntaxPlugin;
 
 /*
@@ -65,7 +66,7 @@ class syntax_plugin_yalist extends SyntaxPlugin
         $this->Lexer->addExitPattern('\n', 'plugin_yalist');
     }
 
-    public function handle($match, $state, $pos, Doku_Handler $handler)
+    public function handle($match, $state, $pos, Handler $handler)
     {
         $output = [];
         $level  = 0;
@@ -211,7 +212,7 @@ class syntax_plugin_yalist extends SyntaxPlugin
 
     public function render($format, Doku_Renderer $renderer, $data)
     {
-        if ($format != 'xhtml' && $format != 'latex' && $format != 'odt') {
+        if (!in_array($format, ['xhtml', 'latex', 'odt'])) {
             return false;
         }
         if ($data['state'] == DOKU_LEXER_UNMATCHED) {
@@ -534,46 +535,30 @@ class syntax_plugin_yalist extends SyntaxPlugin
                 self::$odt_table_stack [self::$odt_table_stack_index - 1]['ddState'] = 1;
                 break;
             case 'dt_content_open':
-                switch ($this->getConf('def_list_odt_export')) {
-                    case 'table':
-                        $renderer->p_open();
-                        break;
-                    default:
-                        $renderer->listcontent_open();
-                        break;
-                }
+                match ($this->getConf('def_list_odt_export')) {
+                    'table' => $renderer->p_open(),
+                    default => $renderer->listcontent_open(),
+                };
                 $this->renderODTOpenSpan($renderer);
                 break;
             case 'dd_content_open':
-                switch ($this->getConf('def_list_odt_export')) {
-                    case 'table':
-                        $renderer->p_open();
-                        break;
-                    default:
-                        $renderer->listcontent_open();
-                        break;
-                }
+                match ($this->getConf('def_list_odt_export')) {
+                    'table' => $renderer->p_open(),
+                    default => $renderer->listcontent_open(),
+                };
                 break;
             case 'dt_content_close':
                 $this->renderODTCloseSpan($renderer);
-                switch ($this->getConf('def_list_odt_export')) {
-                    case 'table':
-                        $renderer->p_close();
-                        break;
-                    default:
-                        $renderer->listcontent_close();
-                        break;
-                }
+                match ($this->getConf('def_list_odt_export')) {
+                    'table' => $renderer->p_close(),
+                    default => $renderer->listcontent_close(),
+                };
                 break;
             case 'dd_content_close':
-                switch ($this->getConf('def_list_odt_export')) {
-                    case 'table':
-                        $renderer->p_close();
-                        break;
-                    default:
-                        $renderer->listcontent_close();
-                        break;
-                }
+                match ($this->getConf('def_list_odt_export')) {
+                    'table' => $renderer->p_close(),
+                    default => $renderer->listcontent_close(),
+                };
                 break;
             case 'dt_close':
                 switch ($this->getConf('def_list_odt_export')) {
